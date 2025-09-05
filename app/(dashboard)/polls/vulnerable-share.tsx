@@ -31,6 +31,15 @@ export default function VulnerableShare({
     setShareUrl(pollUrl);
   }, [pollId]);
 
+  const safeOpen = (url: string) => {
+    const w = window.open(url, "_blank", "noopener,noreferrer");
+    if (w) {
+      try {
+        w.opener = null;
+      } catch {}
+    }
+  };
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -43,18 +52,12 @@ export default function VulnerableShare({
   const shareOnTwitter = () => {
     const text = encodeURIComponent(`Check out this poll: ${pollTitle}`);
     const url = encodeURIComponent(shareUrl);
-    window.open(
-      `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
-      "_blank",
-    );
+    safeOpen(`https://twitter.com/intent/tweet?text=${text}&url=${url}`);
   };
 
   const shareOnFacebook = () => {
     const url = encodeURIComponent(shareUrl);
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-      "_blank",
-    );
+    safeOpen(`https://www.facebook.com/sharer/sharer.php?u=${url}`);
   };
 
   const shareViaEmail = () => {
@@ -62,7 +65,7 @@ export default function VulnerableShare({
     const body = encodeURIComponent(
       `Hi! I'd like to share this poll with you: ${shareUrl}`,
     );
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+    safeOpen(`mailto:?subject=${subject}&body=${body}`);
   };
 
   return (

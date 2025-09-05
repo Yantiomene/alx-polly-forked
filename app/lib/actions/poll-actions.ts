@@ -98,8 +98,42 @@ export async function submitVote(pollId: string, optionIndex: number) {
 // DELETE POLL
 export async function deletePoll(id: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("polls").delete().eq("id", id);
+
+  // Require authentication
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    return { error: userError.message };
+  }
+  if (!user) {
+    return { error: "You must be logged in to delete a poll." };
+  }
+
+  // Admins can delete any poll; owners can delete their own
+  const isAdmin = (user.user_metadata as any)?.role === "admin";
+
+  let result;
+  if (isAdmin) {
+    result = await supabase.from("polls").delete().eq("id", id).select();
+  } else {
+    result = await supabase
+      .from("polls")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select();
+  }
+
+  const { error, data } = result as { error: any; data: any[] | null };
+
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Poll not found or you do not have permission to delete it." };
+  }
+
   revalidatePath("/polls");
   return { error: null };
 }
