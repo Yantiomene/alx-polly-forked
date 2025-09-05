@@ -94,3 +94,26 @@ npm run dev
 The application will be available at `http://localhost:3000`.
 
 Good luck, engineer! This is your chance to step into the shoes of a security professional and make a real impact on the quality and safety of this application. Happy hunting!
+
+---
+
+## Security Hardening Updates (2025-09-05)
+
+The following security improvements have been implemented:
+
+- Admin route protection in middleware: The `/admin` route is now gated by an Edge Middleware guard that checks Supabase auth and user role. Unauthenticated users are redirected to `/login` and non-admins are redirected away.
+- Strong security headers and CSP: Global headers now include HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy, Permissions-Policy, and a conservative Content Security Policy tuned for Next.js and Supabase.
+- Reverse tabnabbing prevention: All social share actions now open links safely with `noopener`/`noreferrer` and explicitly nullify `window.opener`.
+- Reduced sensitive logging: Removed noisy console logs in the auth context that could expose user/session details.
+- Framework update: Upgraded Next.js to a patched version to incorporate security fixes.
+
+### How to Verify
+
+- Admin gating: Visit `/admin` while logged out (expect redirect to `/login`), as a non-admin (expect redirect away), and as an admin (expect access).
+- Share component safety: From a poll detail page, use Twitter/Facebook/Email sharing and confirm new tabs open safely and the original page context cannot be controlled by the new tab.
+- Clipboard and CSP: Use the "Copy" button in the share card and confirm it works with the stricter headers. If any feature is blocked, review and minimally adjust CSP in `next.config.ts`.
+
+### Notes
+
+- Secrets: Environment variables are loaded from `.env.local`. `.env*` is git-ignored to avoid committing secrets.
+- Builds: After pulling these changes, run `npm install` and `npm run build` to verify the project compiles under the updated Next.js and headers configuration.
